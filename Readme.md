@@ -1,4 +1,5 @@
 [![Build status][travis-img]][travis-url]
+[![Test coverage][coveralls-img]][coveralls-url]
 [![License][license-img]][license-url]
 [![GoDoc][doc-img]][doc-url]
 
@@ -15,6 +16,8 @@ MIT
 
 [travis-img]: https://img.shields.io/travis/onebook/httpbench.svg?style=flat-square
 [travis-url]: https://travis-ci.org/onebook/httpbench
+[coveralls-img]: https://img.shields.io/coveralls/onebook/httpbench.svg?style=flat-square
+[coveralls-url]: https://coveralls.io/r/onebook/httpbench?branch=master
 [license-img]: http://img.shields.io/badge/license-MIT-green.svg?style=flat-square
 [license-url]: http://opensource.org/licenses/MIT
 [doc-img]: http://img.shields.io/badge/GoDoc-reference-blue.svg?style=flat-square
