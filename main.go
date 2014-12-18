@@ -9,6 +9,8 @@ import "fmt"
 import "os"
 
 var method, uri, headers, body string
+var limitRequestTimes int
+var totalRequestTimes int
 var co, recoverTimes int
 
 var debug = Debug("httpbench")
@@ -16,7 +18,7 @@ var debug = Debug("httpbench")
 func main() {
 	usage := `
 	Usage:
-		httpbench [-u=<url>] [-m=<method>] [-c=<concurrent>] [-h=<headers>] [-b=<body>]
+		httpbench [-u=<url>] [-m=<method>] [-c=<concurrent>] [-h=<headers>] [-b=<body>] [-l=<limit>]
 		httpbench --help
 		httpbench --version
 
@@ -26,6 +28,7 @@ func main() {
 		-c=<concurrent> Set number of requests to run concurrently
 		-h=<headers>    Add headers, such as: "Content-Type:text/xml; Content-Length:100"
 		-b=<body>       Add body, such as: "name=haoxin&age=24"
+		-l=<limit>      Set limit for request times
 		--help          Show this screen
 		--version       Show version
 	`
@@ -41,7 +44,7 @@ func main() {
 			defer func() {
 				if r := recover(); r != nil {
 					recoverTimes++
-					fmt.Println("recovered %d, message: ", recoverTimes, r)
+					fmt.Printf("panic %d in main, message: %v \n", recoverTimes, r)
 					if recoverTimes >= co {
 						os.Exit(1)
 					}
@@ -50,6 +53,11 @@ func main() {
 
 			for {
 				request(method, uri, headers, body)
+
+				if totalRequestTimes >= limitRequestTimes {
+					fmt.Println("reach limit times")
+					os.Exit(1)
+				}
 			}
 		}()
 	}
@@ -82,15 +90,9 @@ func parse(args map[string]interface{}) {
 		case "-u":
 			uri = getUrl(v)
 		case "-c":
-			if v != nil {
-				s := v.(string)
-				var e error
-				co, e = strconv.Atoi(s)
-				if co <= 0 || e != nil {
-					fmt.Println("invalid concurrent")
-					os.Exit(1)
-				}
-			}
+			co = getInt(v)
+		case "-l":
+			limitRequestTimes = getInt(v)
 		}
 	}
 
@@ -103,8 +105,12 @@ func parse(args map[string]interface{}) {
 		method = "GET"
 	}
 
-	if co == 0 {
+	if co <= 0 {
 		co = 5
+	}
+
+	if limitRequestTimes <= 0 {
+		limitRequestTimes = 10000
 	}
 
 	fmt.Printf("concurrency: %d, method: %s, url: %s \n", co, method, uri)
@@ -136,4 +142,19 @@ func getUrl(i interface{}) string {
 		os.Exit(1)
 	}
 	return u.String()
+}
+
+func getInt(i interface{}) int {
+	if i == nil {
+		return 0
+	}
+
+	s := i.(string)
+	num, e := strconv.Atoi(s)
+
+	if e != nil {
+		return 0
+	}
+
+	return num
 }

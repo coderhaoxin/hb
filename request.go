@@ -8,6 +8,8 @@ import "fmt"
 
 var client *http.Client
 var concurrent = 0
+var panicTimes int
+var panics [10]int64
 
 func init() {
 	transport := &http.Transport{
@@ -19,6 +21,8 @@ func init() {
 }
 
 func request(method, httpUrl, headers, body string) {
+	defer catchPanic()
+
 	reader := strings.NewReader(body)
 	req, err := http.NewRequest(method, httpUrl, reader)
 
@@ -52,7 +56,8 @@ func request(method, httpUrl, headers, body string) {
 
 	bodyLength := len(data)
 
-	fmt.Printf("* response * length: %d, duration: %d ms, concurrent: %d \n", bodyLength, (end-start)/1000000, concurrent)
+	totalRequestTimes++
+	fmt.Printf("* response * length: %d, duration: %d ms, total %d, concurrent: %d \n", bodyLength, (end-start)/1000000, totalRequestTimes, concurrent)
 
 	panicError(err)
 }
@@ -60,5 +65,22 @@ func request(method, httpUrl, headers, body string) {
 func panicError(e error) {
 	if e != nil {
 		panic(e)
+	}
+}
+
+func catchPanic() {
+	end := len(panics) - 1
+	panicTimes++
+
+	for i := 0; i < end; i++ {
+		panics[i] = panics[i+1]
+	}
+
+	panics[end] = time.Now().Unix()
+
+	if panicTimes < 3*end || panics[end]-panics[0] > 3 {
+		if r := recover(); r != nil {
+			fmt.Printf("panic %d in request, message: %v \n", panicTimes, r)
+		}
 	}
 }
