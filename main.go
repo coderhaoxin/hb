@@ -9,7 +9,7 @@ import "fmt"
 import "os"
 
 var method, uri, headers, body string
-var co int
+var co, recoverTimes int
 
 var debug = Debug("httpbench")
 
@@ -38,6 +38,16 @@ func main() {
 
 	for i := 0; i < co; i++ {
 		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					recoverTimes++
+					fmt.Println("recovered %d, message: ", recoverTimes, r)
+					if recoverTimes >= co {
+						os.Exit(1)
+					}
+				}
+			}()
+
 			for {
 				request(method, uri, headers, body)
 			}

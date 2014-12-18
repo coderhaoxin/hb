@@ -7,7 +7,7 @@ import "time"
 import "fmt"
 
 var client *http.Client
-var total = 0
+var concurrent = 0
 
 func init() {
 	transport := &http.Transport{
@@ -22,8 +22,7 @@ func request(method, httpUrl, headers, body string) {
 	reader := strings.NewReader(body)
 	req, err := http.NewRequest(method, httpUrl, reader)
 
-	if err != nil {
-	}
+	panicError(err)
 
 	// set headers
 	for _, header := range strings.Split(headers, ";") {
@@ -39,23 +38,27 @@ func request(method, httpUrl, headers, body string) {
 	}
 
 	// do http request
-	total++
+	concurrent++
 	start := time.Now().UnixNano()
 	res, err := client.Do(req)
 
-	if err != nil {
-	}
+	panicError(err)
 
 	data, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 
 	end := time.Now().UnixNano()
-	total--
+	concurrent--
 
 	bodyLength := len(data)
 
-	fmt.Printf("* response * length: %d, duration: %d ms, total: %d \n", bodyLength, (end-start)/1000000, total)
+	fmt.Printf("* response * length: %d, duration: %d ms, concurrent: %d \n", bodyLength, (end-start)/1000000, concurrent)
 
-	if err != nil {
+	panicError(err)
+}
+
+func panicError(e error) {
+	if e != nil {
+		panic(e)
 	}
 }
