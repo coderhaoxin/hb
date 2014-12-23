@@ -1,7 +1,9 @@
 package main
 
+import "github.com/olekukonko/tablewriter"
 import "github.com/docopt/docopt-go"
 import . "github.com/tj/go-debug"
+import "os/signal"
 import "strings"
 import "strconv"
 import "net/url"
@@ -56,16 +58,62 @@ func main() {
 
 				if totalRequestTimes >= limitRequestTimes {
 					fmt.Println("reach limit times")
+					// report
+					report()
+
 					os.Exit(1)
 				}
 			}
 		}()
 	}
 
+	// catch signal: interrupt
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+	go func() {
+		sig := <-sigChan
+		fmt.Printf("quit by %s \n", sig.String())
+		// report
+		report()
+
+		os.Exit(0)
+	}()
+
 	if <-quit {
 	}
 }
 
+// print result to stdout
+func report() {
+	table := tablewriter.NewWriter(os.Stdout)
+
+	table.SetHeader([]string{"name", "result"})
+
+	data := [][]string{
+		[]string{"limit request times", toString(limitRequestTimes)},
+		[]string{"total request times", toString(totalRequestTimes)},
+		[]string{"recover times", toString(recoverTimes)},
+		[]string{"panic times", toString(panicTimes)},
+		[]string{"max panic duration", toString(panics[len(panics)-1] - panics[0])},
+		[]string{"concurrent", toString(co)},
+	}
+
+	average, levels := analysis()
+	data = append(data, []string{"average", toString(average)})
+
+	for k, v := range levels {
+		data = append(data, []string{k, toString(v)})
+	}
+
+	for _, v := range data {
+		table.Append(v)
+	}
+
+	fmt.Println()
+	table.Render()
+}
+
+// parse args
 func parse(args map[string]interface{}) {
 	for k, v := range args {
 		switch k {
@@ -157,4 +205,21 @@ func getInt(i interface{}) int {
 	}
 
 	return num
+}
+
+func toString(value interface{}) string {
+	var v string
+
+	switch value.(type) {
+	case string:
+		v, _ = value.(string)
+	case int:
+		v = strconv.Itoa(value.(int))
+	case int32:
+		v = strconv.FormatInt(int64(value.(int32)), 10)
+	case int64:
+		v = strconv.FormatInt(value.(int64), 10)
+	}
+
+	return v
 }
