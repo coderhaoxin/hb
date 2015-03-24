@@ -124,11 +124,11 @@ func analysis() (average int64, levels map[string]int64) {
 		}
 	}
 
-	levels[toString(level0)+"~"+toString(level1)] = level0
-	levels[toString(level1)+"~"+toString(level2)] = level1
-	levels[toString(level2)+"~"+toString(level3)] = level2
-	levels[toString(level3)+"~"+toString(level4)] = level3
-	levels["above "+toString(level4)] = level4
+	levels[toString(level0)+"~"+toString(level1)] = counts[0]
+	levels[toString(level1)+"~"+toString(level2)] = counts[1]
+	levels[toString(level2)+"~"+toString(level3)] = counts[2]
+	levels[toString(level3)+"~"+toString(level4)] = counts[3]
+	levels["above "+toString(level4)] = counts[4]
 
 	return
 }
