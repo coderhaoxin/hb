@@ -1,2 +1,2 @@
 build:
-	@go build -o bench
+	@go build -o hb

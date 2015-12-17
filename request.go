@@ -29,6 +29,9 @@ func request(method, httpUrl, headers, body string) {
 
 	panicError(err)
 
+	// default User-Agent
+	req.Header.Set("User-Agent", "hb/"+version)
+
 	// set headers
 	for _, header := range strings.Split(headers, ";") {
 		s := strings.Split(header, ":")

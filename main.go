@@ -15,27 +15,29 @@ var limitRequestTimes int
 var totalRequestTimes int
 var co, recoverTimes int
 
-var debug = Debug("httpbench")
+var debug = Debug("hb")
+
+const version = "v0.2.0"
 
 func main() {
 	usage := `
 	Usage:
-		httpbench [-u=<url>] [-m=<method>] [-c=<concurrent>] [-h=<headers>] [-b=<body>] [-l=<limit>]
-		httpbench --help
-		httpbench --version
+		hb [-u=<url>] [-m=<method>] [-c=<concurrent>] [--headers=<headers>] [--body=<body>] [--limit=<limit>]
+		hb --help
+		hb --version
 
 	Options:
-		-u=<url>        Required, url to bench
-		-m=<method>     Add method, such as: GET
-		-c=<concurrent> Set number of requests to run concurrently
-		-h=<headers>    Add headers, such as: "Content-Type:text/xml; Content-Length:100"
-		-b=<body>       Add body, such as: "name=haoxin&age=24"
-		-l=<limit>      Set limit for request times
-		--help          Show this screen
-		--version       Show version
+		-u=<url>            Required, url to bench
+		-m=<method>         Add method, such as: GET
+		-c=<concurrent>     Set number of requests to run concurrently
+		--headers=<headers> Add headers, such as: "Content-Type:text/xml; Content-Length:100"
+		--body=<body>       Add body, such as: "name=haoxin&age=24"
+		--limit=<limit>     Set limit for request times
+		--help              Show this screen
+		--version           Show version
 	`
 
-	args, _ := docopt.Parse(usage, os.Args[1:], true, "v0.1.0", false)
+	args, _ := docopt.Parse(usage, os.Args[1:], true, version, false)
 	debug("args: %v", args)
 	parse(args)
 
@@ -117,11 +119,11 @@ func report() {
 func parse(args map[string]interface{}) {
 	for k, v := range args {
 		switch k {
-		case "-h":
+		case "--headers":
 			if v != nil {
 				headers = v.(string)
 			}
-		case "-b":
+		case "--body":
 			if v != nil {
 				body = v.(string)
 			}
@@ -139,7 +141,7 @@ func parse(args map[string]interface{}) {
 			uri = getUrl(v)
 		case "-c":
 			co = getInt(v)
-		case "-l":
+		case "--limit":
 			limitRequestTimes = getInt(v)
 		}
 	}
